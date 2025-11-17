@@ -1,0 +1,17 @@
+# Core dependencies
+pydantic>=2.0.0
+httpx>=0.24.0
+streamlit>=1.28.0
+
+# Development dependencies
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0
+
+# Optional dependencies (commented out for basic setup)
+# python-dotenv>=1.0.0  # For .env file support
+# aiofiles>=23.0.0     # For async file operations
+# fastapi>=0.100.0     # If adding API endpoints
+# uvicorn>=0.23.0      # For running FastAPI
