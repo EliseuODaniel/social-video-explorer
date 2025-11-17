@@ -107,7 +107,8 @@ class MetaProvider(BaseVideoProvider):
         info.update({
             "platforms": ["Facebook", "Instagram"],
             "api_version": "Graph API v18.0 (planned)",
-            "credential_status": "configured" if self._has_required_credentials() else "missing"
+            "credential_status": "configured" if self._has_required_credentials() else "missing",
+            "setup_instructions": self.get_setup_instructions()
         })
         return info
 

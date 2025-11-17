@@ -126,6 +126,27 @@ class MockProvider(BaseVideoProvider):
             "data_source": "Generated sample data",
             "auth_required": False,
             "rate_limits": "None (mock provider)",
-            "data_freshness": "Real-time generated"
+            "data_freshness": "Real-time generated",
+            "setup_instructions": self.get_setup_instructions()
         })
         return info
+
+    def get_setup_instructions(self) -> str:
+        """Get setup instructions for mock provider.
+
+        Returns:
+            String with setup instructions
+        """
+        return """
+        Mock Provider Setup:
+
+        The mock provider requires no configuration and works out-of-the-box.
+        It generates realistic sample video data for demonstration and testing purposes.
+
+        • No API keys required
+        • No rate limiting
+        • Real-time data generation
+        • Perfect for development and demos
+
+        Simply use the application without configuring any credentials to see mock data!
+        """

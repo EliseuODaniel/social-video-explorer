@@ -1,6 +1,8 @@
 # Social Video Explorer
 
-A platform for exploring and analyzing video content from multiple social media platforms.
+A platform for exploring and analyzing video content from social media platforms.
+
+**Current Status**: Basic skeleton with mock demonstration mode and Meta provider stub. Future releases will add real multi-platform integration.
 
 ## 🚀 Quick Start
 
@@ -46,10 +48,20 @@ The application will open in your web browser at `http://localhost:8501`
 
 ## 📋 Features
 
-- **Multi-platform Search**: Search across multiple video platforms (Meta, YouTube, TikTok planned)
-- **Mock Mode**: Demo mode with sample data when API credentials are not configured
-- **Normalized Results**: Consistent data format across all platforms
+### Current Implementation (v0.1.0)
+- **Mock Mode**: Demo mode with realistic sample data for testing and demonstrations
+- **Meta Provider Stub**: Placeholder for future Facebook/Instagram integration
+- **Provider Framework**: Extensible architecture for adding new video platforms
+- **Normalized Results**: Consistent data format across all providers
 - **Simple UI**: Clean, responsive interface built with Streamlit
+- **Configuration Management**: Secure credential handling via environment variables
+
+### Planned Features (Future Releases)
+- **Real API Integration**: Full Meta (Facebook/Instagram), YouTube, and TikTok providers
+- **Advanced Search**: Filters, pagination, and multi-provider orchestration
+- **Export Functionality**: JSON export of search results
+- **Caching System**: Intelligent API response caching
+- **Enhanced UI**: Rich media cards, detailed views, and analytics
 
 ## 🔧 Configuration
 
@@ -73,11 +85,13 @@ META_ACCESS_TOKEN=your_meta_access_token_here
 
 ### Provider Setup
 
-#### Meta (Facebook/Instagram)
+#### Meta (Facebook/Instagram) - Stub Implementation
 1. Create a Meta Developer Account: https://developers.facebook.com/
 2. Create a new app with Facebook Login and Instagram Basic Display
 3. Generate an access token with required permissions
 4. Add the token to your `.env` file
+
+**Note**: Current implementation includes only a stub Meta provider that validates credentials structure but does not perform actual API calls. Full integration will be available in future releases.
 
 ## 🏗️ Architecture
 
@@ -128,13 +142,25 @@ MIT License - see LICENSE file for details
 
 ## 🗺️ Roadmap
 
+### ✅ Completed (v0.1.0)
 - [x] Basic architecture and mock provider
-- [ ] Complete Meta API integration
+- [x] Meta provider stub with credential validation
+- [x] Streamlit UI with search interface
+- [x] Provider framework for extensibility
+- [x] Configuration management with .env support
+
+### 🚧 In Progress
+- [ ] Complete Meta API integration with real video search
+
+### 📋 Planned (Future Releases)
 - [ ] YouTube provider implementation
 - [ ] TikTok provider implementation
-- [ ] Advanced search features and caching
-- [ ] Export functionality
+- [ ] Advanced search features (filters, pagination)
+- [ ] Search result caching and rate limiting
+- [ ] Export functionality (JSON, CSV)
 - [ ] Container deployment (Docker)
+- [ ] Enhanced UI with rich media cards
+- [ ] Analytics and insights dashboard
 
 ## 🤝 Contributing
 
