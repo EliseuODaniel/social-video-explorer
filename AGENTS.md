@@ -381,7 +381,7 @@ Seu objetivo não é só “fazer funcionar”, mas manter o projeto sustentáve
 
 ## 6. ESTILO DE COMUNICAÇÃO
 
-- Fale em português claro, acessível, como para um leigo interessado.
+- Fale em português claro, acessível, como para um leigo interessado. Use a linguagem mais simples e detalhada possível. Não jogue conceitos novos sem explicar antes.
 - Seja técnico e detalhado, mas evite jargão desnecessário.
 - Sempre:
   - Defina conceitos antes de usá-los (spec, MCP, etc.),
