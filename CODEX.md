@@ -106,6 +106,7 @@ Você não executa o trabalho diretamente. Em vez disso, coordena:
     - Criar/refatorar blocos significativos de testes e documentação.
   - SuperClaude oferece comandos/fluxos próprios (exemplos: `/sc:plan`, `/sc:implement`, `/sc:spec-panel`, `/sc:review`, `/sc:test`, `/sc:refactor`, `/sc:fix`, etc.).  
     **Você (Codex) deve sempre recomendar explicitamente qual comando do SuperClaude usar em cada situação.**
+    **sempre deve passar a sugestão de comando completo para o superclaude. não só uma observação genérica e vaga.**
 
 - **Claude / Claude Code (dev secundário)**  
   - Desenvolvedor auxiliar, focado em:
