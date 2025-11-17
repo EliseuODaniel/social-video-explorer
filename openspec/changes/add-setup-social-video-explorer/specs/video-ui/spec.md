@@ -1,99 +1,65 @@
 ## ADDED Requirements
 
-### Requirement: Streamlit Video Search Interface
-The system SHALL provide a web-based user interface using Streamlit for searching and displaying video results from multiple social platforms.
+### Requirement: Basic Streamlit Video Search Interface
+The system SHALL provide a basic web-based user interface using Streamlit for searching and displaying video results.
 
-#### Scenario: Search form interaction
+#### Scenario: Basic search form interaction
 - **WHEN** user accesses the main Streamlit page
 - **THEN** system SHALL display search input field
-- **AND** show provider selection checkboxes
-- **AND** include filters for date range, video duration, and result count
+- **AND** show basic search parameters (query, max_results)
 - **AND** provide clear search button with loading state
 
-#### Scenario: Real-time search execution
+#### Scenario: Basic search execution
 - **WHEN** user submits search form with valid parameters
 - **THEN** system SHALL show loading spinner during search
 - **AND** call search service with provided parameters
-- **AND** handle API errors gracefully with user-friendly messages
-- **AND** display progress updates for multi-provider searches
+- **AND** handle basic errors with user-friendly messages
 
-#### Scenario: Results grid display
+#### Scenario: Basic results grid display
 - **WHEN** search service returns video results
-- **THEN** system SHALL display results in responsive grid layout
-- **AND** show video thumbnail, title, duration, and engagement metrics
-- **AND** include provider badge and source information
-- **AND** implement infinite scroll or pagination for large result sets
+- **THEN** system SHALL display results in simple grid layout
+- **AND** show basic video information (title, thumbnail, provider)
+- **AND** display results in a scrollable list
 
-### Requirement: Video Result Cards
-The system SHALL display individual video results in standardized card format with key metadata and actions.
+### Requirement: Basic Video Result Display
+The system SHALL display video results in a simple card format with essential metadata.
 
-#### Scenario: Video card display
+#### Scenario: Basic video card display
 - **WHEN** displaying a single video result
-- **THEN** card SHALL show video thumbnail with hover preview
-- **AND** display title, channel/creator, view count, engagement metrics
-- **AND** include publish date and platform source
-- **AND** provide actions: view details, export JSON, open original
+- **THEN** card SHALL show video thumbnail
+- **AND** display title and basic metadata
+- **AND** include provider source information
 
-#### Scenario: Video details modal
-- **WHEN** user clicks on video result card
-- **THEN** system SHALL open modal with detailed information
-- **AND** display full description, tags, and engagement breakdown
-- **AND** show raw API payload option for developers
-- **AND** include external link to original video
+#### Scenario: Mock mode indication
+- **WHEN** application runs in demo mode
+- **THEN** system SHALL display demo mode indicator
+- **AND** show that results are sample data
+- **AND** provide guidance for real API setup
 
-#### Scenario: Export functionality
-- **WHEN** user requests export of search results
-- **THEN** system SHALL generate JSON export with normalized VideoResult data
-- **AND** include raw_payload field for complete API data
-- **AND** provide download button with timestamped filename
-- **AND** support individual video or batch result export
-
-### Requirement: Mock Service Integration
-The system SHALL include mock service mode for demonstration and testing without requiring real API credentials.
+### Requirement: Basic Mock Service Integration
+The system SHALL include mock service mode for demonstration without requiring real API credentials.
 
 #### Scenario: Mock search results
-- **WHEN** application runs in demo mode without API keys
+- **WHEN** application runs without API keys
 - **THEN** system SHALL use mock search service
-- **AND** generate realistic sample video data
-- **AND** simulate different platforms and result patterns
-- **AND** display demo mode indicator in UI
+- **AND** generate sample video data
+- **AND** display clear demo mode indicators
 
-#### Scenario: Provider availability indicators
-- **WHEN** some providers are unavailable due to missing credentials
-- **THEN** system SHALL show provider status in search form
-- **AND** disable search for unavailable providers
-- **AND** provide configuration guidance for missing credentials
-- **AND** allow search with available providers only
+#### Scenario: Basic provider status
+- **WHEN** providers are unavailable due to missing credentials
+- **THEN** system SHALL show basic provider status
+- **AND** provide simple setup instructions
+- **AND** enable mock mode automatically
 
-### Requirement: Responsive Design and Accessibility
-The system SHALL provide responsive design that works on desktop, tablet, and mobile devices with proper accessibility features.
-
-#### Scenario: Mobile layout adaptation
-- **WHEN** user accesses interface on mobile device
-- **THEN** system SHALL adapt layout to single column
-- **AND** optimize touch targets for mobile interaction
-- **AND** maintain full functionality with simplified controls
-
-#### Scenario: Accessibility compliance
-- **WHEN** users navigate with screen readers or keyboard
-- **THEN** all interactive elements SHALL have proper ARIA labels
-- **AND** keyboard navigation SHALL work for all features
-- **AND** color contrast SHALL meet WCAG AA standards
-- **AND** provide text alternatives for images and icons
-
-### Requirement: Error Handling and User Feedback
-The system SHALL provide clear error messages and user feedback for all operations and edge cases.
+### Requirement: Basic Error Handling
+The system SHALL provide clear error messages for basic operations.
 
 #### Scenario: Search error handling
-- **WHEN** search fails due to API errors or network issues
+- **WHEN** search fails due to basic errors
 - **THEN** system SHALL display user-friendly error message
-- **AND** provide specific error details when helpful
-- **AND** suggest retry actions or alternative approaches
-- **AND** log technical errors for debugging
+- **AND** provide simple retry guidance
 
 #### Scenario: No results scenario
 - **WHEN** search returns zero results
-- **THEN** system SHALL display helpful "no results" message
-- **AND** suggest search refinements or alternative terms
-- **AND** provide option to broaden search criteria
-- **AND** show tips for better search queries
+- **THEN** system SHALL display "no results" message
+- **AND** suggest trying different search terms

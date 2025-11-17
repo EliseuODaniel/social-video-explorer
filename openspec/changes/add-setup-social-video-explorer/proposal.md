@@ -1,18 +1,20 @@
-# Change: Setup Core Video Explorer Architecture
+# Change: Setup Basic Video Explorer Skeleton
 
 ## Why
-O projeto Social Video Explorer atualmente existe apenas como configuração básica (git, arquivos de governança), sem código implementado. Precisamos estabelecer a arquitetura fundamental para suportar busca e análise de vídeos de múltiplas plataformas sociais, começando com Meta e expandindo para outras plataformas.
+O projeto Social Video Explorer atualmente existe apenas como configuração básica (git, arquivos de governança), sem código implementado. Precisamos estabelecer o esqueleto fundamental da arquitetura com modo mock para permitir desenvolvimento iterativo futuro.
 
 ## What Changes
 - Criar estrutura de pastas base following the specified layered architecture (ui/, core/, services/, providers/, workflows/)
-- Implementar contrato BaseVideoProvider com método get_capabilities() para padronizar integração com APIs sociais
-- Definir schemas Pydantic para VideoResult e SearchParams com raw_payload para dados brutos das APIs
-- Criar search_service que orquestra múltiplos providers respeitando max_results
-- Implementar UI básica em Streamlit com integração mock ao serviço e exibição em grid
-- Estabelecer uso de .env para gestão segura de segredos e tokens de API
+- Implementar contrato BaseVideoProvider com método get_capabilities() para padronizar futuras integrações
+- Definir schemas Pydantic básicos para VideoResult e SearchParams com raw_payload
+- Criar search_service básico que opera com provider único e modo mock
+- Implementar UI simples em Streamlit com formulário básico, grid simples e modo demo
+- Estabelecer uso de .env para configuração e credenciais futuras
+- Incluir Meta provider stub e mock provider para demonstração
 
 ## Impact
-- Affected specs: Nenhuma (criando novas capabilities do zero)
-- Affected code: Estrutura completa do projeto base
-- External dependencies: APIs do Meta, YouTube, TikTok, Instagram via providers específicos
-- Security: Implementa gestão segura de credenciais via variáveis de ambiente
+- Affected specs: Nenhuma (criando novas capabilities básicas do zero)
+- Affected code: Esqueleto estrutural do projeto base
+- External dependencies: Nenhuma para modo mock; preparação para APIs futuras
+- Security: Prepara estrutura para gestão segura de credenciais via variáveis de ambiente
+- Future work: Funcionalidades avançadas (caching, rate limiting, múltiplos providers) virão em changes futuras
