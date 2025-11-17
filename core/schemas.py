@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from enum import Enum
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class VideoProvider(str, Enum):
@@ -51,21 +51,23 @@ class VideoResult(BaseModel):
         description="Complete raw response from provider API"
     )
 
-    class Config:
-        """Pydantic configuration."""
-        use_enum_values = True
-        json_encoders = {
+    model_config = {
+        "use_enum_values": True,
+        "json_encoders": {
             datetime: lambda v: v.isoformat() if v else None
         }
+    }
 
-    @validator('duration_seconds')
+    @field_validator('duration_seconds')
+    @classmethod
     def validate_duration(cls, v):
         """Validate duration is non-negative."""
         if v is not None and v < 0:
             raise ValueError('Duration must be non-negative')
         return v
 
-    @validator('view_count', 'like_count', 'comment_count', 'share_count')
+    @field_validator('view_count', 'like_count', 'comment_count', 'share_count')
+    @classmethod
     def validate_counts(cls, v):
         """Validate engagement counts are non-negative."""
         if v is not None and v < 0:
@@ -80,7 +82,7 @@ class SearchParams(BaseModel):
     with validation and sensible defaults.
     """
 
-    query: str = Field(..., min_length=1, description="Search query string")
+    query: str = Field(..., description="Search query string")
     max_results: int = Field(
         default=10,
         ge=1,
@@ -94,11 +96,12 @@ class SearchParams(BaseModel):
         description="Specific provider to search (None for all available)"
     )
 
-    class Config:
-        """Pydantic configuration."""
-        use_enum_values = True
+    model_config = {
+        "use_enum_values": True
+    }
 
-    @validator('query')
+    @field_validator('query')
+    @classmethod
     def validate_query(cls, v):
         """Validate search query is not empty or just whitespace."""
         if not v or not v.strip():
@@ -118,6 +121,6 @@ class SearchResponse(BaseModel):
     provider_used: Optional[VideoProvider] = Field(None, description="Provider that was used")
     is_mock_mode: bool = Field(False, description="Whether results are from mock provider")
 
-    class Config:
-        """Pydantic configuration."""
-        use_enum_values = True
+    model_config = {
+        "use_enum_values": True
+    }

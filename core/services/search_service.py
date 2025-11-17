@@ -108,11 +108,14 @@ class SearchService:
 
         # Determine which provider to use
         provider_to_use = self._select_provider(params.provider)
-        logger.info(f"Using provider: {provider_to_use.value}")
+        # Handle both enum and string values due to Pydantic V2 conversion
+        provider_name = provider_to_use.value if hasattr(provider_to_use, 'value') else str(provider_to_use)
+        logger.info(f"Using provider: {provider_name}")
 
         try:
-            # Perform search with selected provider
-            provider = self._providers[provider_to_use]
+            # Perform search with selected provider (handle both enum and string)
+            provider_key = provider_to_use if isinstance(provider_to_use, VideoProvider) else VideoProvider(provider_to_use)
+            provider = self._providers[provider_key]
             results = await provider.search(params)
 
             # Create response
@@ -124,7 +127,9 @@ class SearchService:
                 is_mock_mode=(provider_to_use == VideoProvider.MOCK)
             )
 
-            logger.info(f"Search completed: {len(results)} results from {provider_to_use.value}")
+            # Handle both enum and string values for logging
+            provider_name = provider_to_use.value if hasattr(provider_to_use, 'value') else str(provider_to_use)
+            logger.info(f"Search completed: {len(results)} results from {provider_name}")
             return response
 
         except ProviderError as e:
@@ -138,9 +143,11 @@ class SearchService:
 
         except Exception as e:
             logger.error(f"Unexpected error during search: {e}")
+            # Handle provider_to_use conversion for error reporting
+            error_provider = provider_to_use if isinstance(provider_to_use, VideoProvider) else VideoProvider(provider_to_use)
             raise ProviderError(
                 f"Search failed: {str(e)}",
-                provider_to_use,
+                error_provider,
                 original_error=e
             )
 

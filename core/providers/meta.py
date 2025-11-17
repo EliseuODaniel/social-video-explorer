@@ -112,6 +112,14 @@ class MetaProvider(BaseVideoProvider):
         })
         return info
 
+    def is_available(self) -> bool:
+        """Check if Meta provider is available for use.
+
+        Returns:
+            True if provider has required credentials and can be used
+        """
+        return self._has_required_credentials()
+
     def get_setup_instructions(self) -> str:
         """Get instructions for setting up Meta provider.
 
