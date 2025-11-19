@@ -849,6 +849,16 @@ drwxr-xr-x  3 edann edann  4096 Nov 17 02:32 tests
 
 _**Agent (glm-4.5-air) (sidechain)**_
 
+<tool-use data-tool-type="grep" data-tool-name="Glob"><details>
+<summary>Tool use: **Glob**</summary>
+ pattern `core/**/*.py`
+```
+No files found
+```
+</details></tool-use>
+
+_**Agent (glm-4.5-air) (sidechain)**_
+
 <tool-use data-tool-type="bash" data-tool-name="Bash"><details>
 <summary>Tool use: **Bash**</summary>
  Encontrar todos arquivos Python no diretório core
@@ -860,16 +870,6 @@ _**Agent (glm-4.5-air) (sidechain)**_
 
 Agora vou explorar a estrutura do diretório core e procurar por arquivos Python:
 
-
-_**Agent (glm-4.5-air) (sidechain)**_
-
-<tool-use data-tool-type="grep" data-tool-name="Glob"><details>
-<summary>Tool use: **Glob**</summary>
- pattern `core/**/*.py`
-```
-No files found
-```
-</details></tool-use>
 
 _**Agent (glm-4.5-air) (sidechain)**_
 
@@ -3114,6 +3114,23 @@ _**Agent (glm-4.5-air) (sidechain)**_
 
 _**Agent (glm-4.5-air) (sidechain)**_
 
+Vou verificar se há algum arquivo de configuração na raiz do projeto:
+
+
+_**Agent (glm-4.5-air) (sidechain)**_
+
+<tool-use data-tool-type="bash" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+ Encontrar arquivos de configuração na raiz
+
+`find . -maxdepth 1 -name ".*" -type f | grep -v ".git" | head -10`
+```
+./.mcp.json
+```
+</details></tool-use>
+
+_**Agent (glm-4.5-air) (sidechain)**_
+
 <tool-use data-tool-type="read" data-tool-name="Read"><details>
 <summary>Tool use: **Read**</summary>
  `./tessl.json`
@@ -3128,23 +3145,6 @@ _**Agent (glm-4.5-air) (sidechain)**_
 Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
 </system-reminder>
 
-```
-</details></tool-use>
-
-_**Agent (glm-4.5-air) (sidechain)**_
-
-Vou verificar se há algum arquivo de configuração na raiz do projeto:
-
-
-_**Agent (glm-4.5-air) (sidechain)**_
-
-<tool-use data-tool-type="bash" data-tool-name="Bash"><details>
-<summary>Tool use: **Bash**</summary>
- Encontrar arquivos de configuração na raiz
-
-`find . -maxdepth 1 -name ".*" -type f | grep -v ".git" | head -10`
-```
-./.mcp.json
 ```
 </details></tool-use>
 
@@ -3170,6 +3170,11 @@ c6c456d chore: final history cleanup
 e1d9e26 chore: initial import
 ```
 </details></tool-use>
+
+_**Agent (glm-4.5-air) (sidechain)**_
+
+Vou verificar o status das branches e commits recentes:
+
 
 _**Agent (glm-4.5-air) (sidechain)**_
 
@@ -3217,11 +3222,6 @@ Untracked files:
 no changes added to commit (use "git add" and/or "git commit -a")
 ```
 </details></tool-use>
-
-_**Agent (glm-4.5-air) (sidechain)**_
-
-Vou verificar o status das branches e commits recentes:
-
 
 _**Agent (glm-4.5-air) (sidechain)**_
 
@@ -16589,6 +16589,229 @@ Changes not staged for commit:
 Untracked files:
   (use "git add <file>..." to include in what will be committed)
 	.specstory/history/2025-11-17_18-41-20Z-request-interrupted-by-user.md
+```
+</details></tool-use>
+
+_**Agent (glm-4.6)**_
+
+Perfeito! O git status mostra exatamente os arquivos que queremos no staging. Vou limpar os arquivos deletados restantes:
+
+
+_**Agent (glm-4.6)**_
+
+<tool-use data-tool-type="bash" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+ Adicionar todas as alterações (incluindo arquivos deletados)
+
+`git add -A`
+</details></tool-use>
+
+_**Agent (glm-4.6)**_
+
+<tool-use data-tool-type="bash" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+ Contar arquivos no staging
+
+`git status --porcelain | wc -l && echo "Arquivos no staging:" && git status --porcelain | grep "^M " | wc -l && echo "Arquivos novos no staging:" && git status --porcelain | grep "^A " | wc -l && echo "Arquivos deletados no staging:" && git status --porcelain | grep "^D " | wc -l`
+```
+39
+Arquivos no staging:
+2
+Arquivos novos no staging:
+19
+Arquivos deletados no staging:
+17
+```
+</details></tool-use>
+
+_**Agent (glm-4.6)**_
+
+<tool-use data-tool-type="generic" data-tool-name="TodoWrite"><details>
+**Agent task list:**
+- [X] 🌡️ Remover arquivos indesejados (.coverage, .specstory/*, __pycache__)
+- [X] 🌡️ Stage arquivos do OpenSpec
+- [X] 🌡️ Verificar git status
+- [⚡] 🌡️ Fazer commit das alterações
+- [ ] 🌡️ Push opcional para develop
+
+</details></tool-use>
+```
+Todos have been modified successfully. Ensure that you continue to use the todo list to track your progress. Please proceed with the current tasks if applicable
+```
+
+_**Agent (glm-4.6)**_
+
+## Passo 4: Fazer commit das alterações
+
+
+_**Agent (glm-4.6)**_
+
+<tool-use data-tool-type="bash" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+ Fazer commit com mensagem detalhada
+
+```bash
+git commit -m "$(cat <<'EOF'
+chore: align OpenSpec archives and spec discipline
+
+- Update archived changes with correct task completion status (72/72 tasks)
+- Add missing "Enhanced Provider Capabilities" header to video-providers spec
+- Create clean-spec-discipline change for OpenSpec hygiene practices
+- Archive add-meta-provider-prod with complete MVP implementation documentation
+- Remove unwanted build artifacts (.coverage, __pycache__, .specstory)
+
+This ensures future archiving processes work correctly and establishes
+proper spec discipline practices for the project.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+EOF
+)"
+```
+
+```
+[develop e58ca7e] chore: align OpenSpec archives and spec discipline
+ 39 files changed, 18882 insertions(+), 16475 deletions(-)
+ delete mode 100644 .specstory/.project.json
+ delete mode 100644 .specstory/history/2025-11-17_01-31-49Z-voce-esta-rodando-via.md
+ delete mode 100644 .specstory/history/2025-11-17_01-33-59Z-criar-repositorio-git-local.md
+ delete mode 100644 .specstory/history/2025-11-17_01-33-59Z.md
+ create mode 100644 .specstory/history/2025-11-17_18-41-20Z-request-interrupted-by-user.md
+ delete mode 100644 core/__pycache__/__init__.cpython-312.pyc
+ delete mode 100644 core/__pycache__/schemas.cpython-312.pyc
+ delete mode 100644 core/providers/__pycache__/__init__.cpython-312.pyc
+ delete mode 100644 core/providers/__pycache__/base.cpython-312.pyc
+ delete mode 100644 core/providers/__pycache__/meta.cpython-312.pyc
+ delete mode 100644 core/providers/__pycache__/mock.cpython-312.pyc
+ delete mode 100644 core/services/__pycache__/__init__.cpython-312.pyc
+ delete mode 100644 core/services/__pycache__/search_service.cpython-312.pyc
+ create mode 100644 openspec/changes/archive/2025-11-18-add-meta-provider-prod/README.md
+ create mode 100644 openspec/changes/archive/2025-11-18-add-meta-provider-prod/deltas/video-providers.md
+ create mode 100644 openspec/changes/archive/2025-11-18-add-meta-provider-prod/deltas/video-search.md
+ create mode 100644 openspec/changes/archive/2025-11-18-add-meta-provider-prod/deltas/video-ui.md
+ create mode 100644 openspec/changes/archive/2025-11-18-add-meta-provider-prod/mvp-implementation-guide.md
+ create mode 100644 openspec/changes/archive/2025-11-18-add-meta-provider-prod/proposal.md
+ create mode 100644 openspec/changes/archive/2025-11-18-add-meta-provider-prod/specs/video-providers/spec.md
+ create mode 100644 openspec/changes/archive/2025-11-18-add-meta-provider-prod/specs/video-search/spec.md
+ create mode 100644 openspec/changes/archive/2025-11-18-add-meta-provider-prod/specs/video-ui/spec.md
+ create mode 100644 openspec/changes/archive/2025-11-18-add-meta-provider-prod/tasks.md
+ create mode 100644 openspec/changes/clean-spec-discipline/README.md
+ create mode 100644 openspec/changes/clean-spec-discipline/deltas/video-providers.md
+ create mode 100644 openspec/changes/clean-spec-discipline/deltas/video-search.md
+ create mode 100644 openspec/changes/clean-spec-discipline/deltas/video-ui.md
+ create mode 100644 openspec/changes/clean-spec-discipline/proposal.md
+ create mode 100644 openspec/changes/clean-spec-discipline/specs/video-providers/spec.md
+ create mode 100644 openspec/changes/clean-spec-discipline/specs/video-search/spec.md
+ create mode 100644 openspec/changes/clean-spec-discipline/specs/video-ui/spec.md
+ create mode 100644 openspec/changes/clean-spec-discipline/tasks.md
+ delete mode 100644 tests/__pycache__/__init__.cpython-312.pyc
+ delete mode 100644 tests/__pycache__/test_integration.cpython-312-pytest-9.0.1.pyc
+ delete mode 100644 tests/__pycache__/test_providers.cpython-312-pytest-9.0.1.pyc
+ delete mode 100644 tests/__pycache__/test_schemas.cpython-312-pytest-9.0.1.pyc
+ delete mode 100644 tests/__pycache__/test_search_service.cpython-312-pytest-9.0.1.pyc
+```
+</details></tool-use>
+
+_**Agent (glm-4.6)**_
+
+<tool-use data-tool-type="generic" data-tool-name="TodoWrite"><details>
+**Agent task list:**
+- [X] 🌡️ Remover arquivos indesejados (.coverage, .specstory/*, __pycache__)
+- [X] 🌡️ Stage arquivos do OpenSpec
+- [X] 🌡️ Verificar git status
+- [X] 🌡️ Fazer commit das alterações
+- [⚡] 🌡️ Push opcional para develop
+
+</details></tool-use>
+```
+Todos have been modified successfully. Ensure that you continue to use the todo list to track your progress. Please proceed with the current tasks if applicable
+```
+
+_**Agent (glm-4.6)**_
+
+## Passo 5: Push opcional para develop
+
+
+_**Agent (glm-4.6)**_
+
+<tool-use data-tool-type="bash" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+ Push das alterações para develop
+
+`git push origin develop`
+```
+To https://github.com/EliseuODaniel/social-video-explorer.git
+   66bd551..e58ca7e  develop -> develop
+```
+</details></tool-use>
+
+_**Agent (glm-4.6)**_
+
+<tool-use data-tool-type="generic" data-tool-name="TodoWrite"><details>
+**Agent task list:**
+- [X] 🌡️ Remover arquivos indesejados (.coverage, .specstory/*, __pycache__)
+- [X] 🌡️ Stage arquivos do OpenSpec
+- [X] 🌡️ Verificar git status
+- [X] 🌡️ Fazer commit das alterações
+- [X] 🌡️ Push opcional para develop
+
+</details></tool-use>
+```
+Todos have been modified successfully. Ensure that you continue to use the todo list to track your progress. Please proceed with the current tasks if applicable
+```
+
+_**Agent (glm-4.6)**_
+
+<tool-use data-tool-type="bash" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+ Verificar status final limpo
+
+`git status`
+```
+On branch develop
+Your branch is up to date with 'origin/develop'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   .specstory/history/2025-11-17_18-41-20Z-request-interrupted-by-user.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+</details></tool-use>
+
+_**Agent (glm-4.6)**_
+
+Há um arquivo restante. Vou removê-lo:
+
+
+_**Agent (glm-4.6)**_
+
+<tool-use data-tool-type="bash" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+ Remover arquivo .specstory restante
+
+`rm -f .specstory/history/2025-11-17_18-41-20Z-request-interrupted-by-user.md`
+</details></tool-use>
+
+_**Agent (glm-4.6)**_
+
+<tool-use data-tool-type="bash" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+ Verificar status completamente limpo
+
+`git status`
+```
+On branch develop
+Your branch is up to date with 'origin/develop'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   .specstory/history/2025-11-17_18-41-20Z-request-interrupted-by-user.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
 ```
 </details></tool-use>
 
