@@ -16,6 +16,9 @@ import requests
 from ..schemas import VideoResult, SearchParams, Platform, MediaType, ProviderStatus
 from .base import BaseVideoProvider
 from .oauth_client import MetaOAuth2Client, MetaOAuthError
+from .rate_limiter import RateLimiter, RateLimitStatus
+from .cache import LRUCache, get_cache
+from .circuit_breaker import CircuitBreaker, get_circuit_breaker, CircuitBreakerOpenError
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +56,13 @@ class MetaProvider(BaseVideoProvider):
         self.timeout = 30
         self.max_retries = 3
 
+        # Initialize rate limiting, caching, and circuit breaker
+        self.rate_limiter = RateLimiter()
+        self.cache = get_cache("meta_provider", max_size=500, ttl_seconds=900)  # 15 min TTL
+        self.circuit_breaker = get_circuit_breaker("meta_api")
+
         self._log_info(
-            f"Initialized in {'production' if self.production_mode else 'mock'} mode"
+            f"Initialized in {'production' if self.production_mode else 'mock'} mode with rate limiting and circuit breaker"
         )
 
     async def search_hashtag(
@@ -75,6 +83,19 @@ class MetaProvider(BaseVideoProvider):
             self._log_warning("Production mode disabled, skipping real search")
             return []
 
+        # Check cache first
+        cache_key = f"hashtag:{hashtag}:{max_results}:{media_type.value}"
+        cached_results = self.cache.get(cache_key)
+        if cached_results is not None:
+            self._log_info(f"Cache hit for hashtag search: '{hashtag}'")
+            return cached_results
+
+        # Check rate limiting
+        bucket_name = f"hashtag_search_{hashtag}"
+        if not self.rate_limiter.can_proceed(bucket_name):
+            self._log_warning(f"Rate limited for hashtag search: '{hashtag}'")
+            return []
+
         results = []
 
         try:
@@ -91,6 +112,9 @@ class MetaProvider(BaseVideoProvider):
                 )
             )
 
+            # Cache the results (1 hour TTL for hashtags)
+            self.cache.set(cache_key, results[:max_results], ttl_seconds=3600)
+
             self._log_info(f"Found {len(results)} results for hashtag '{hashtag}'")
             return results[:max_results]
 
@@ -101,8 +125,9 @@ class MetaProvider(BaseVideoProvider):
     async def _search_instagram_hashtag(
         self, hashtag: str, max_results: int, media_type: MediaType
     ) -> List[VideoResult]:
-        """Search Instagram hashtag content."""
-        try:
+        """Search Instagram hashtag content with circuit breaker protection."""
+
+        async def _perform_search():
             app_token = self.oauth_client.get_app_token()
 
             # First, get the hashtag ID
@@ -159,7 +184,12 @@ class MetaProvider(BaseVideoProvider):
             self._log_info(f"Instagram hashtag search returned {len(results)} results")
             return results
 
-        except requests.RequestException as e:
+        try:
+            return await self.circuit_breaker.async_call(_perform_search)
+        except CircuitBreakerOpenError:
+            self._log_warning(f"Circuit breaker OPEN for Instagram hashtag search: '{hashtag}'")
+            return []
+        except (requests.RequestException, Exception) as e:
             self._log_error(e, "Instagram hashtag search")
             return []
 
@@ -221,6 +251,19 @@ class MetaProvider(BaseVideoProvider):
         if not self.production_mode:
             return []
 
+        # Check cache first
+        cache_key = f"user:{user_id}:{max_results}"
+        cached_results = self.cache.get(cache_key)
+        if cached_results is not None:
+            self._log_info(f"Cache hit for user search: '{user_id}'")
+            return cached_results
+
+        # Check rate limiting
+        bucket_name = f"user_search_{user_id}"
+        if not self.rate_limiter.can_proceed(bucket_name):
+            self._log_warning(f"Rate limited for user search: '{user_id}'")
+            return []
+
         results = []
 
         try:
@@ -234,6 +277,9 @@ class MetaProvider(BaseVideoProvider):
                         user_id, max_results - len(results)
                     )
                 )
+
+            # Cache the results (30 minutes TTL for user content)
+            self.cache.set(cache_key, results[:max_results], ttl_seconds=1800)
 
             return results[:max_results]
 
@@ -400,6 +446,41 @@ class MetaProvider(BaseVideoProvider):
 
         response_time = (datetime.now() - start_time).total_seconds() * 1000
 
+        # Get rate limiting status
+        rate_limit_status = self.rate_limiter.get_status("global")
+        rate_limit_remaining = rate_limit_status.remaining_requests
+
+        # Get cache statistics
+        cache_stats = self.cache.get_stats()
+
+        # Include additional metadata in oauth_status
+        health_metadata = {
+            "rate_limit_status": {
+                "requests_per_hour": rate_limit_status.requests_per_hour,
+                "current_requests": rate_limit_status.current_requests,
+                "remaining_requests": rate_limit_remaining,
+                "is_limited": rate_limit_status.is_limited,
+                "time_until_reset_seconds": rate_limit_status.time_until_reset_seconds
+            },
+            "cache_stats": {
+                "total_entries": cache_stats.total_entries,
+                "hit_count": cache_stats.hit_count,
+                "hit_ratio": round(cache_stats.hit_ratio, 3),
+                "memory_usage_bytes": cache_stats.memory_usage_bytes
+            }
+        }
+
+        # Merge with existing oauth status
+        if oauth_status:
+            try:
+                oauth_data = json.loads(oauth_status)
+                oauth_data.update(health_metadata)
+                oauth_status = json.dumps(oauth_data)
+            except json.JSONDecodeError:
+                oauth_status = json.dumps(health_metadata)
+        else:
+            oauth_status = json.dumps(health_metadata)
+
         return ProviderStatus(
             name=self.name,
             is_healthy=is_healthy,
@@ -407,5 +488,5 @@ class MetaProvider(BaseVideoProvider):
             error_message=error_message,
             response_time_ms=int(response_time),
             oauth_status=oauth_status,
-            rate_limit_remaining=None,  # Meta doesn't provide this in simple responses
+            rate_limit_remaining=rate_limit_remaining,
         )

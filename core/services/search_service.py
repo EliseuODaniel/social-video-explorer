@@ -22,6 +22,8 @@ from ..schemas import (
 )
 from ..providers import BaseVideoProvider, MetaProvider, MockMetaProvider
 from ..providers.oauth_client import MetaOAuth2Client
+from ..providers.cache import LRUCache, get_cache
+from ..providers.rate_limiter import RateLimiter, get_rate_limiter
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +40,13 @@ class SearchService:
         self.providers: Dict[Platform, BaseVideoProvider] = {}
         self.oauth_client: Optional[MetaOAuth2Client] = None
 
+        # Initialize caching and rate limiting
+        self.search_cache = get_cache("search_results", max_size=200, ttl_seconds=900)  # 15 min TTL
+        self.rate_limiter = get_rate_limiter()
+
         self._initialize_providers()
         self._log_info(
-            f"SearchService initialized in {'production' if self.production_mode else 'mock'} mode"
+            f"SearchService initialized in {'production' if self.production_mode else 'mock'} mode with caching"
         )
 
     def _initialize_providers(self):
@@ -78,7 +84,7 @@ class SearchService:
 
     async def search(self, params: SearchParams) -> SearchResponse:
         """
-        Perform search across appropriate providers with fallback logic.
+        Perform search across appropriate providers with cache-first strategy and fallback logic.
 
         Args:
             params: Search parameters
@@ -87,6 +93,31 @@ class SearchService:
             SearchResponse with results and metadata
         """
         start_time = datetime.now()
+
+        # Create cache key based on search parameters
+        cache_key = self._create_cache_key(params)
+
+        # Check cache first
+        cached_response = self.search_cache.get(cache_key)
+        if cached_response is not None:
+            self._log_info(f"Cache hit for search: {params.query}")
+            # Update cache metadata
+            cached_response.search_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
+            return cached_response
+
+        # Check rate limiting before proceeding
+        if not self.rate_limiter.can_proceed("search"):
+            self._log_warning("Rate limited for search request")
+            # Return cached results if available, otherwise empty response
+            return SearchResponse(
+                results=[],
+                total_found=0,
+                search_time_ms=int((datetime.now() - start_time).total_seconds() * 1000),
+                platforms_searched=[],
+                query_used=params.query,
+                errors=["Rate limit exceeded - try again later"],
+            )
+
         all_results: List[VideoResult] = []
         platforms_searched: Set[Platform] = set()
         errors: List[str] = []
@@ -146,8 +177,12 @@ class SearchService:
                 errors=errors,
             )
 
+            # Cache the response (with different TTL based on query type)
+            ttl_seconds = self._get_cache_ttl(params)
+            self.search_cache.set(cache_key, response, ttl_seconds=ttl_seconds)
+
             self._log_info(
-                f"Search completed: {len(all_results)} results in {search_time_ms}ms"
+                f"Search completed: {len(all_results)} results in {search_time_ms}ms (cached for {ttl_seconds}s)"
             )
             return response
 
@@ -165,6 +200,47 @@ class SearchService:
                 query_used=params.query,
                 errors=errors,
             )
+
+    def _create_cache_key(self, params: SearchParams) -> str:
+        """
+        Create a cache key from search parameters.
+
+        Args:
+            params: Search parameters
+
+        Returns:
+            String cache key
+        """
+        key_parts = [
+            f"query:{params.query or 'empty'}",
+            f"platform:{params.platform.value}",
+            f"max_results:{params.max_results}",
+            f"sort_by:{params.sort_by}",
+            f"media_type:{params.media_type.value if params.media_type else 'all'}",
+        ]
+
+        return "|".join(key_parts)
+
+    def _get_cache_ttl(self, params: SearchParams) -> int:
+        """
+        Get appropriate TTL for caching based on query type.
+
+        Args:
+            params: Search parameters
+
+        Returns:
+            TTL in seconds
+        """
+        # Different TTLs based on query type
+        if params.query and params.query.startswith('#'):
+            # Hashtag searches: 1 hour
+            return 3600
+        elif params.sort_by == "popular":
+            # Popular/trending: 15 minutes
+            return 900
+        else:
+            # Default: 30 minutes
+            return 1800
 
     async def _search_platform_with_fallback(
         self, provider: BaseVideoProvider, params: SearchParams
@@ -288,10 +364,10 @@ class SearchService:
 
     async def get_system_health(self) -> SystemHealth:
         """
-        Get overall system health status.
+        Get overall system health status including cache and rate limiting metrics.
 
         Returns:
-            SystemHealth object with provider statuses
+            SystemHealth object with provider statuses and system metrics
         """
         total_providers = len(self.providers)
         healthy_providers = 0
@@ -313,6 +389,36 @@ class SearchService:
                         error_message=str(e),
                     )
                 )
+
+        # Include cache and rate limiting statistics
+        cache_stats = self.search_cache.get_stats()
+        rate_limit_status = self.rate_limiter.get_status("global")
+
+        # Add system-wide metadata to the health check
+        system_metadata = {
+            "cache_stats": {
+                "search_results_cache": {
+                    "total_entries": cache_stats.total_entries,
+                    "hit_count": cache_stats.hit_count,
+                    "miss_count": cache_stats.miss_count,
+                    "hit_ratio": round(cache_stats.hit_ratio, 3),
+                    "memory_usage_bytes": cache_stats.memory_usage_bytes
+                }
+            },
+            "rate_limit_stats": {
+                "search_requests": {
+                    "requests_per_hour": rate_limit_status.requests_per_hour,
+                    "current_requests": rate_limit_status.current_requests,
+                    "remaining_requests": rate_limit_status.remaining_requests,
+                    "is_limited": rate_limit_status.is_limited,
+                    "time_until_reset_seconds": rate_limit_status.time_until_reset_seconds
+                }
+            },
+            "system_performance": {
+                "cache_hit_ratio": round(cache_stats.hit_ratio, 3),
+                "rate_limit_utilization": round(rate_limit_status.current_requests / rate_limit_status.requests_per_hour, 3) if rate_limit_status.requests_per_hour > 0 else 0.0
+            }
+        }
 
         return SystemHealth(
             is_healthy=healthy_providers > 0,

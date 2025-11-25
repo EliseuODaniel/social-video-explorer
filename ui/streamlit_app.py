@@ -92,7 +92,7 @@ def initialize_search_service():
 
 
 def show_production_status(search_service: SearchService):
-    """Display production mode status and provider information."""
+    """Display production mode status with rate limiting and cache indicators."""
     st.markdown("### 📊 System Status")
 
     try:
@@ -123,6 +123,87 @@ def show_production_status(search_service: SearchService):
                 unsafe_allow_html=True,
             )
 
+        # Rate limiting status
+        if hasattr(search_service, 'rate_limiter'):
+            rate_limit_status = search_service.rate_limiter.get_status("global")
+
+            st.markdown("#### 🚦 Rate Limiting Status")
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                st.metric(
+                    "Requests/Hour",
+                    rate_limit_status.requests_per_hour
+                )
+
+            with col2:
+                remaining = rate_limit_status.remaining_requests
+                st.metric(
+                    "Remaining",
+                    remaining,
+                    delta=None
+                )
+                # Color code based on remaining requests
+                if remaining < 10:
+                    st.warning("⚠️ Low quota")
+                elif remaining < rate_limit_status.requests_per_hour * 0.2:
+                    st.info("ℹ️ Moderate usage")
+
+            with col3:
+                st.metric(
+                    "Used",
+                    rate_limit_status.current_requests
+                )
+
+            with col4:
+                if rate_limit_status.is_limited:
+                    st.error("🚫 Limited")
+                    time_until_reset = rate_limit_status.time_until_reset_seconds
+                    if time_until_reset > 0:
+                        st.caption(f"Reset in: {int(time_until_reset)}s")
+                else:
+                    st.success("✅ Available")
+
+        # Cache performance
+        if hasattr(search_service, 'search_cache'):
+            cache_stats = search_service.search_cache.get_stats()
+
+            st.markdown("#### 💾 Cache Performance")
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                st.metric(
+                    "Cache Entries",
+                    cache_stats.total_entries
+                )
+
+            with col2:
+                hit_ratio = cache_stats.hit_ratio
+                st.metric(
+                    "Hit Ratio",
+                    f"{hit_ratio:.1%}"
+                )
+                # Color code based on hit ratio
+                if hit_ratio > 0.7:
+                    st.success("🎯 Excellent")
+                elif hit_ratio > 0.4:
+                    st.info("ℹ️ Good")
+                else:
+                    st.warning("⚠️ Low")
+
+            with col3:
+                st.metric(
+                    "Cache Hits",
+                    cache_stats.hit_count
+                )
+
+            with col4:
+                memory_mb = cache_stats.memory_usage_bytes / (1024 * 1024)
+                st.metric(
+                    "Memory",
+                    f"{memory_mb:.1f}MB"
+                )
+
         # OAuth status
         oauth_status = search_service.get_oauth_status()
         if oauth_status.get("oauth_configured"):
@@ -133,11 +214,11 @@ def show_production_status(search_service: SearchService):
         else:
             st.info("ℹ️ OAuth not configured (Mock mode)")
 
-        # Provider details
+        # Provider details with enhanced status
         if system_health.providers:
             st.markdown("#### Provider Details")
             for provider in system_health.providers:
-                col1, col2, col3 = st.columns([2, 1, 1])
+                col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
                 with col1:
                     st.write(f"**{provider.name}**")
                 with col2:
@@ -148,6 +229,14 @@ def show_production_status(search_service: SearchService):
                 with col3:
                     if provider.response_time_ms:
                         st.write(f"{provider.response_time_ms}ms")
+                with col4:
+                    if provider.rate_limit_remaining is not None:
+                        if provider.rate_limit_remaining > 50:
+                            st.success(f"🔋 {provider.rate_limit_remaining}")
+                        elif provider.rate_limit_remaining > 10:
+                            st.warning(f"🔋 {provider.rate_limit_remaining}")
+                        else:
+                            st.error(f"🔋 {provider.rate_limit_remaining}")
 
     except Exception as e:
         st.error(f"Failed to get system status: {e}")
@@ -274,17 +363,20 @@ def display_video_results(results: List[VideoResult]):
 
 
 def show_search_summary(response):
-    """Display search summary information."""
+    """Display search summary information with cache indicator."""
     if not response:
         return
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
         st.metric("Results Found", response.total_found)
 
     with col2:
         st.metric("Search Time", f"{response.search_time_ms}ms")
+        # Show cache indicator based on search time
+        if response.search_time_ms < 50:  # Very fast suggests cache hit
+            st.caption("💾 Likely cached")
 
     with col3:
         st.metric("Platforms", len(response.platforms_searched))
@@ -298,6 +390,19 @@ def show_search_summary(response):
                 else response.query_used
             ),
         )
+
+    with col5:
+        # Check if this was likely a cache hit based on errors and timing
+        if response.search_time_ms < 100 and not response.errors:
+            st.success("💾 Cache Hit")
+        elif response.search_time_ms < 100:
+            st.info("📊 Fast Response")
+        else:
+            st.info("🌐 Fresh Search")
+
+    # Rate limiting warnings
+    if any("rate limit" in error.lower() for error in response.errors):
+        st.warning("🚦 Rate limit detected - using cached results or wait for reset")
 
     # Errors
     if response.errors:
