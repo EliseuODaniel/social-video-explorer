@@ -227,10 +227,11 @@ def display_video_results(results: List[VideoResult]):
 
     for i, result in enumerate(results):
         with st.container():
-            # Platform badge
-            platform_class = f"platform-{result.platform.value}"
+            # Platform badge - handle both enum and string values
+            platform_value = result.platform.value if hasattr(result.platform, 'value') else str(result.platform)
+            platform_class = f"platform-{platform_value}"
             st.markdown(
-                f'<span class="platform-badge {platform_class}">{result.platform.value.upper()}</span>',
+                f'<span class="platform-badge {platform_class}">{platform_value.upper()}</span>',
                 unsafe_allow_html=True,
             )
 
@@ -241,7 +242,8 @@ def display_video_results(results: List[VideoResult]):
                 st.markdown(f"**{result.title}**")
                 st.caption(f"Posted: {result.created_at.strftime('%Y-%m-%d %H:%M')}")
                 if result.media_type:
-                    st.caption(f"Media: {result.media_type.value}")
+                    media_type_value = result.media_type.value if hasattr(result.media_type, 'value') else str(result.media_type)
+                    st.caption(f"Media: {media_type_value}")
 
             with col2:
                 # Engagement metrics
