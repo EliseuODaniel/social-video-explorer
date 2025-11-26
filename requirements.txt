@@ -1,0 +1,30 @@
+# Core dependencies
+pydantic>=2.0.0
+python-dotenv>=0.19.0
+
+# HTTP requests and OAuth2
+requests>=2.31.0
+requests-oauthlib>=1.3.1
+
+# Async support is built into Python 3.7+
+
+# UI dependencies
+streamlit>=1.28.0
+
+# Facebook SDK (optional - for advanced features)
+# facebook-sdk>=3.1.0
+
+# Development dependencies
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.0.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0
+
+# Optional: Additional testing tools
+pytest-mock>=3.10.0
+factory-boy>=3.2.0
+
+# Optional: Performance monitoring
+# prometheus-client>=0.16.0
