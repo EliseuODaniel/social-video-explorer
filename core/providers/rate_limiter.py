@@ -100,6 +100,12 @@ class TokenBucket:
                 is_limited=is_limited
             )
 
+    def reset(self):
+        """Reset token bucket to full capacity."""
+        with self.lock:
+            self.tokens = self.bucket_capacity
+            self.last_refill = time.time()
+
 
 class RateLimiter:
     """
@@ -235,11 +241,18 @@ class RateLimiter:
         Returns:
             Dictionary mapping bucket names to RateLimitStatus
         """
-        statuses = {"global": self.get_status("global")}
+        statuses = {}
 
+        # Get global bucket first outside of lock to avoid deadlock
+        global_bucket = self._get_bucket("global")
+        statuses["global"] = global_bucket.get_status()
+
+        # Get status for other buckets
         with self.lock:
             for bucket_name in self.buckets.keys():
-                statuses[bucket_name] = self.get_status(bucket_name)
+                if bucket_name != "global":
+                    bucket = self.buckets[bucket_name]
+                    statuses[bucket_name] = bucket.get_status()
 
         return statuses
 

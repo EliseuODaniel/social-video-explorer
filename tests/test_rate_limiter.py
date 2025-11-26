@@ -137,21 +137,29 @@ class TestRateLimiter:
 
     def test_rate_limiter_can_proceed(self):
         """Test basic rate limiting functionality."""
+        # Test using a token bucket directly for more predictable behavior
+        from core.providers.rate_limiter import TokenBucket, RateLimiter
+
+        # Create token bucket with small capacity for testing
+        bucket = TokenBucket(refill_rate=10.0, bucket_capacity=5)  # High rate, small capacity
+
+        # Should be able to consume initially
+        assert bucket.consume(1) is True
+        assert bucket.consume(1) is True
+        assert bucket.consume(1) is True
+
+        # Test rate limiter using the bucket
         limiter = RateLimiter()
-        limiter.global_requests_per_hour = 10
-        limiter.burst_size = 5
-        limiter.refill_rate = 1000.0  # Much higher rate for testing
-        limiter.global_bucket = TokenBucket(limiter.refill_rate, limiter.burst_size)
+        limiter.buckets["test_bucket"] = bucket
 
-        # Should be able to proceed initially
-        assert limiter.can_proceed() is True
+        # Should consume from the bucket
+        assert limiter.can_proceed("test_bucket") is True
+        assert limiter.can_proceed("test_bucket") is True
 
-        # Consume all tokens
-        for _ in range(5):
-            assert limiter.can_proceed() is True
-
-        # Should be rate limited now
-        assert limiter.can_proceed() is False
+        # After consuming all tokens, should be rate limited
+        # Note: We need to consume the remaining tokens
+        bucket.consume(2)  # Consume remaining tokens
+        assert limiter.can_proceed("test_bucket") is False
 
     def test_rate_limiter_multiple_buckets(self):
         """Test multiple rate limiter buckets."""

@@ -213,10 +213,10 @@ class SearchService:
         """
         key_parts = [
             f"query:{params.query or 'empty'}",
-            f"platform:{params.platform.value}",
+            f"platform:{params.platform.value if hasattr(params.platform, 'value') else params.platform}",
             f"max_results:{params.max_results}",
             f"sort_by:{params.sort_by}",
-            f"media_type:{params.media_type.value if params.media_type else 'all'}",
+            f"media_type:{params.media_type.value if params.media_type and hasattr(params.media_type, 'value') else (params.media_type or 'all')}",
         ]
 
         return "|".join(key_parts)
